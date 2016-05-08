@@ -1,0 +1,181 @@
+# Open Windows PowerShell ISE to write script/module
+
+# to build help for this new script/module
+<#
+.Synopsis
+This is the short explanation
+
+.Description
+This is the long explanation
+
+.Parameter ReadTest
+The file number of ReadTest user
+
+.Example
+Get-Tutorial -ReadTest FileNumber
+Get-Tutorial -ReadTest FileNumber -ReadAdmin FileNumber2
+
+.LINK
+https://www.youtube.com/watch?v=naneIJeomLg
+.LINK
+https://youtu.be/naneIJeomLg
+#>
+
+<# to use help
+Get-Help .\Tutorial.ps1
+Get-Help .\Tutorial.ps1 -full
+Get-Help Tutorial
+Get-Help Get-Tutorial
+#>
+
+<# create new variable
+use (.) to get the value or do the action related to the script #>
+$myVar = Get-Service bits
+$myVar.Status
+$myVar.Refresh()
+$myVar.Start()
+$myVar.Status
+
+<# to call function directly from PowerShell. We can add more than 1 function the script/module file. #>
+Function Get-Tutorial{
+
+# to have Parameter feature for variables
+[CmdletBinding()]
+
+# for setting variables and call them in PowerShell like -ReadTest
+param(
+    # to make the next variable mandatory
+    [Parameter(
+    Mandatory=$True,
+    HelpMessage="Please provide ReadTest file number.")]
+    [Alias('rtest')]
+    $ReadTest,
+
+    # default variable type is object, we can change its type as below
+    [string]$ReadAdmin,
+    [string[]]$ReadNewAdmins,
+    [bool]$EnableReminder = $True,
+    [int]$FileNumber,
+    [datetime]$myNewDate = "06May2015 3:30 PM"
+)
+
+<# Use input and output
+Write-Host can't be used for pipeline #>
+$Read_Test = Read-Host "Enter Read Test display name"
+Write-Output "Read Test is $Read_Test"
+Write-Host -ForegroundColor Green "Read Test is $Read_Test"
+Write-Warning "$Read_Test"
+Write-Error "$Read_Test"
+
+<# Save results into txt file
+${} means where shall I save this variable #>
+Get-Mailbox $ReadTest | tee c:\scripts\$ReadTest-$myDate.txt
+${Read Test} = "Read Test"
+1..5 > c:\scripts\test.txt
+${c:\scripts\test.txt}
+${c:\scripts\test.txt} = "WooW"
+${c:\scripts\test.txt}
+
+<#To save the output in variable a
+Get-Tutorial -ReadTest FileNumber -OutVariable a
+#>
+
+# Get today date
+$myDate = Get-Date -Format ddMMMyyyy
+[datetime]$myNewDate = "06May2015 3:30 PM"
+
+# Open a location path by explorer window
+Invoke-Item c:\scripts
+
+# Export to XML and Compare services between servers
+Get-Service -ComputerName server1 | Export-Clixml c:\scripts\server1services.xml
+Get-Service -ComputerName server2 | Export-Clixml c:\scripts\server2services.xml
+Compare-Object -ReferenceObject (Import-Clixml c:\scripts\server1services.xml) -DifferenceObject (Import-Clixml c:\scripts\server2services.xml) -Property Name,Status
+
+# Export to HTML
+Get-Service -ComputerName server1 | ConvertTo-Html -Property Name,Status | Out-File c:\scripts\server1services.htm
+
+# Open a file in a notepad or original format
+notepad c:\scripts\server1services.xml
+c:\scripts\server1services.xml
+Invoke-Item c:\scripts\server1services.xml
+Invoke-Expression c:\scripts\server1services.xml
+& 'C:\Program Files\Internet Explorer\iexplore.exe' "c:\scripts\server1services.xml"
+
+<# Pipline different parameter names with same value.
+name: create a new parameter name to match with the right hand of pipeline parameter name.
+expression: the paramenter name of the left hand of pipeline. #>
+Get-ADComputer -filter * | Select -Property name, @{name='ComputerName';expression={$_.name}}
+Get-ADComputer -filter * | Select -Property name, @{n='ComputerName';e={$_.name}}
+Get-ADComputer -filter * | Select -Property @{n='ComputerName';e={$_.name}} | Get-Service -Name BITS
+
+<# If can't pipeline, put it in brackets. And I just want the property (name) and should be string value. 
+ExpandProperty: convert the value to string and print it without title #>
+Get-WmiObject -Class win32_bios -ComputerName (Get-ADComputer -Filter * | Select -ExpandProperty name)
+Get-WmiObject -Class win32_bios -ComputerName (Get-ADComputer -Filter *).name
+# Get-CimInstance same as Get-WmiObject and supports pipeline
+Get-Help Get-CimInstance
+
+<# Advance for not supporting pipeline
+use {} to run the left pipeline, get the wanted value defined in {}, then run the right pipeline #>
+Get-ADComputer -Filter * | Get-WmiObject win32_bios -ComputerName {$_.Name}
+
+# Popup Window for 10s once finished with date. Change 10 to 0 for never auto-expire
+$wshell = New-Object -ComObject Wscript.Shell
+$wshell.Popup("Operation Completed on $myDate",10,"Test Operation",0x1)
+
+# Send Test Email
+Send-MailMessage -From "extest1@company.com" -To “extest2@company.com” -Subject "Test internal email" -Body "This is a test email" –SmtpServer casserver.domain –DeliveryNotificationOption OnFailure,OnSuccess
+
+}
+
+<# now we can create a batch file (.bat) and run it as Administrator to run the scripts in PowerShell
+
+@echo off
+echo run the script in PowerShell
+powershell  C:\scripts\auto\tutorial.ps1
+
+goto end
+
+powershell  C:\scripts\auto\test.ps1
+
+:end
+
+pause
+
+cls
+pause
+#>
+
+<# or run it directly from PowerShell by the below to temporary save the function, use any of the below
+. c:\scripts\auto\tutorial.ps1
+& c:\scripts\auto\tutorial.ps1
+Invoke-Expression -command "c:\scripts\auto\tutorial.ps1"
+#>
+
+<# also we can save the function by save this as a module .psm1 extension, then import it every time to call this function
+
+To import for first time as below
+Import-Module c:\scripts\auto\tutorial.psm1 -Force -Verbose
+
+To import after update
+Remove-Module tutorial -Verbose
+Import-Module c:\scripts\auto\tutorial.psm1 -Verbose
+#>
+
+<# To permanently save this function and dynamically load it without importing it every time, put it in Module folder
+
+To know the path as below
+cat Env:\PSModulePath
+OR
+$env:PSModulePath -split ";"
+
+To put psm1 file in Module folder (NOT system32 path), we need to use/create the below path and copy the module in it
+C:\Users\userprofile\Documents\WindowsPowerShell\Modules\Tutorial\Tutorial.psm1
+
+The module file and Tutorial folder name must be match
+#>
+
+<# To run the function as below
+Get-Tutorial -ReadTest FileNumber
+#>
