@@ -1,0 +1,50 @@
+http://www.metalogix.com/help/Content%20Matrix%20Console/SharePoint%20Edition/002_HowTo/004_SharePointActions/012_SchedulingPowerShell.htm 
+https://technet.microsoft.com/en-us/library/hh847736.aspx 
+
+
+Task Scheduler
+
+Create a test script file “testscript.ps1”
+
+$mypath = "C:\scripts\auto\testscript.csv"
+
+Get-User FileNumber | Select * | Export-Csv $mypath
+
+Send-MailMessage -From "test1@company.com" -To “test2@company.com” -Subject "Test Scheduler" -Body "See Attachment" -Attachments $mypath –SmtpServer cas.domain –DeliveryNotificationOption OnFailure 
+ 
+
+Now that the script is created you can set it up as a scheduled task.
+1.	On the system that the task will be run from, open the Windows Task Scheduler. This can be found in the Start menu, under Start > Administrative Tools.
+2.	In the Task Scheduler, select the Create Task option under the Actions heading on the right-hand side.
+3.	Enter a name for the task, and give it a description (the description is optional and not required).
+4.	In the General tab, go to the Security options heading and specify the user account that the task should be run under. Change the settings so the task will run if the user is logged in or not.
+5.	Next, select the Triggers tab, and click New to add a new trigger for the scheduled task. This new task should use the On a schedule option. The start date can be set to a desired time, and the frequency and duration of the task can be set based on your specific needs. Click OK when your desired settings are entered.
+The below example has the task running every week on Sunday morning at 1 AM, but will stop the task if it runs longer than 4 hours.
+6.	Next, go to the Actions tab and click New to set the action for this task to run. Set the Action to Start a program.
+7.	In the Program/script box enter ( powershell.exe ).
+8.	In the Add arguments (optional) box enter the value "[parameters] [path]\[Your PowerShell Script Name]". For example, if your PowerShell Script is named "testscript.ps1" then you would enter ( c:\scripts\auto\testscript.ps1 ) as the value.
+If your script has any parameters, you want to add them now: ( -ReadTest FileNumber -NoLogo -Noninteractive c:\scripts\auto\testscript.ps1 -Verb runAs )
+  •	-Command Specifies the command text to execute as though it were typed at the PowerShell command prompt. 
+  •	-EncodedCommand Specifies the base64-encoded command text to execute. 
+  •	-ExecutionPolicy Sets the default execution policy for the console session. 
+  •	-File Sets the name of a script file to execute. 
+  •	-InputFormat Sets the format for data sent to PowerShell as either text string or serialized XML. The default format is XML. Valid values are text and XML. 
+  •	-NoExit Does not exit after running startup commands. This parameter is useful when you run PowerShell commands or scripts via the command prompt (cmd.exe). 
+  •	-NoLogo Starts the PowerShell console without displaying the copyright banner. 
+  •	-Noninteractive Starts the PowerShell console in non-interactive mode. In this mode, PowerShell does not present an interactive prompt to the user. 
+  •	-NoProfile Tells the PowerShell console not to load the current user’s profile. 
+  •	-OutputFormat Sets the format for output as either text string or serialized XML. The default format is text. Valid values are text and XML. 
+  •	-PSConsoleFile Loads the specified Windows PowerShell console file. Console files end with the .psc1 extension and can be used to ensure that specific snap-in extensions are loaded and available. You can create a console file using Export-Console in Windows PowerShell. 
+  •	-Sta Starts PowerShell in single-threaded mode. 
+  •	-Version Sets the version of Windows PowerShell to use for compatibility, such as 1.0. 
+  •	-WindowStyle Sets the window style as Normal, Minimized, Maximized, or Hidden. The default is Normal.
+  •	-Verb runAs to run as administrator
+  
+9.	Then, in the Start in (optional) box, add the location of the folder that contains your PowerShell script. In this example, the value is ( c:\scripts\auto ).
+Note: The location used in the Start in box will also be used for storing the scheduled task run times, the job history for the copies, and any additional logging that may occur.
+Click OK when all the desired settings are made.
+
+10.	Next, set any other desired settings in the Conditions and Settings tabs. You can also set up additional actions, such as emailing an Administrator each time the script is run.
+11.	Once all the desired actions have been made (or added), click OK. The task will be immediately set, and is ready to run.
+
+The scheduling of this task is complete, and is now ready to run based on the entered settings.
